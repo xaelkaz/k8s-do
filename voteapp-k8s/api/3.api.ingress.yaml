@@ -1,0 +1,17 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: api
+  namespace: cloudacademy
+  labels:
+    role: api
+    env: demo
+spec:
+ rules:
+ - host: api.157.230.67.183.nip.io
+   http:
+     paths:
+     - path: /
+       backend:
+         serviceName: api
+         servicePort: 8080
