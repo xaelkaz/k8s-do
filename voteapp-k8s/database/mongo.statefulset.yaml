@@ -8,8 +8,8 @@ metadata:
     env: demo
 spec:
   ports:
-  - port: 27017
-    targetPort: 27017
+    - port: 27017
+      targetPort: 27017
   clusterIP: None
   selector:
     role: db
@@ -24,12 +24,14 @@ spec:
   replicas: 3
   selector:
     matchLabels:
+      app: mongo
       role: db
       env: demo
       replicaset: rs0.main
   template:
     metadata:
       labels:
+        app: mongo
         role: db
         env: demo
         replicaset: rs0.main
@@ -37,15 +39,15 @@ spec:
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                - key: replicaset
-                  operator: In
-                  values:
-                  - rs0.main
-              topologyKey: kubernetes.io/hostname
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: replicaset
+                      operator: In
+                      values:
+                        - rs0.main
+                topologyKey: kubernetes.io/hostname
       terminationGracePeriodSeconds: 10
       containers:
         - name: mongo
@@ -66,13 +68,15 @@ spec:
             - name: mongodb-persistent-storage-claim
               mountPath: /data/db
   volumeClaimTemplates:
-  - metadata:
-      name: mongodb-persistent-storage-claim
-      namespace: cloudacademy
-      annotations:
-        volume.beta.kubernetes.io/storage-class: "standard"
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 1Gi
+    - metadata:
+        name: mongodb-persistent-storage-claim
+        namespace: cloudacademy
+        annotations:
+          volume.beta.kubernetes.io/storage-class: "standard"
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+        storageClassName: do-block-storage
