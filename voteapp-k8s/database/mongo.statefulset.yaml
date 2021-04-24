@@ -1,67 +1,50 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongo
+  name: mongodb-service
   namespace: cloudacademy
   labels:
-    role: db
-    env: demo
+    name: mongo
 spec:
   ports:
     - port: 27017
       targetPort: 27017
   clusterIP: None
   selector:
-    role: db
+    role: mongo
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: mongo
+  name: mongod
   namespace: cloudacademy
 spec:
-  serviceName: mongo
-  replicas: 3
+  serviceName: mongodb-service
+  replicas: 1
   selector:
     matchLabels:
-      app: mongo
-      role: db
-      env: demo
-      replicaset: rs0.main
+      role: mongo
   template:
     metadata:
       labels:
-        app: mongo
-        role: db
-        env: demo
-        replicaset: rs0.main
+        role: mongo
+        environment: test
+        replicaset: MainRepSet
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                    - key: replicaset
-                      operator: In
-                      values:
-                        - rs0.main
-                topologyKey: kubernetes.io/hostname
       terminationGracePeriodSeconds: 10
       containers:
-        - name: mongo
+        - name: mongod-container
           image: mongo
           command:
-            - "numactl"
-            - "--interleave=all"
             - "mongod"
-            - "--wiredTigerCacheSizeGB"
-            - "0.1"
             - "--bind_ip"
             - "0.0.0.0"
             - "--replSet"
-            - "rs0"
+            - "MainRepSet"
+          resources:
+            requests:
+              cpu: 0.2
+              memory: 200Mi
           ports:
             - containerPort: 27017
           volumeMounts:
@@ -74,9 +57,7 @@ spec:
         annotations:
           volume.beta.kubernetes.io/storage-class: "standard"
       spec:
-        accessModes:
-          - ReadWriteOnce
+        accessModes: [ "ReadWriteOnce" ]
         resources:
           requests:
-            storage: 5Gi
-        storageClassName: do-block-storage
+            storage: 1Gi
